@@ -110,18 +110,18 @@ Research the `--network-alias search` for `docker run` - it gives them an additi
 
 docker network create search_net
 docker network list
-# Spin up four systems that will listen on :9200 and report their "name"
+* Spin up four systems that will listen on :9200 and report their "name"
 for X in 1 2 3 4 ; do
   docker container run -d --net search_net --network-alias search --name es_${X} elasticsearch:2
 done
 docker container ps -a
 
-# Spin up another image to check the DNS in this network
+* Spin up another image to check the DNS in this network
 docker container run -it --rm --net search_net registry.access.redhat.com/ubi8/ubi:latest bash
-# Inside the "ubi" container
-  # Install the jq tool
+* Inside the "ubi" container
+  * Install the jq tool
   dnf -y install jq
-  # Run the "curl" command 25 times:
+  * Run the "curl" command 25 times:
   for X in $(seq 1 25) ; do curl -s search:9200 | jq .name ; done
 
 NOTE: The output of the for/curl loop above should show multiple "name" lines, roughly different.  These names are the ones that the `elasticsearch:2` auto generated.
@@ -133,4 +133,6 @@ Or you can run:
     watch -n 1 '(for X in $(seq 1 25) ; do curl -s search:9200 | jq .name ; done ) | sort'
 
 Shows the 25 responses in a bit easier to see sorted layout.
+
+# Container Images
 
