@@ -97,3 +97,40 @@ Features: AsynchDNS IDN IPv6 Largefile GSS-API Kerberos SPNEGO NTLM NTLM_WB SSL 
 
 Using `docker container run --rm -it registry.access.redhat.com/ubi8/ubi:latest`
 
+# Assignement : DNS Round Robin Test
+
+Fixup:
+ * elasticsearch newer versions require environment variable changes to work correctly.
+ * `centos` is no longer a supported image by Red Hat, so we can use `rockylinux:9` as a drop-in replacement for `centos`, or `alpine` for Linux easy access to utilities like nslookup and curl.
+
+Research the `--network-alias search` for `docker run` - it gives them an additional DNS name to respond to.
+
+ - Run `alpine nslookup search` with `--net` to see the two containers list for the same DNS anme
+ - Run `centos curl -s search:9200` with `--net` multiple times until see both "name" fields show
+
+docker network create search_net
+docker network list
+# Spin up four systems that will listen on :9200 and report their "name"
+for X in 1 2 3 4 ; do
+  docker container run -d --net search_net --network-alias search --name es_${X} elasticsearch:2
+done
+docker container ps -a
+
+# Spin up another image to check the DNS in this network
+docker container run -it --rm --net search_net registry.access.redhat.com/ubi8/ubi:latest bash
+# Inside the "ubi" container
+  # Install the jq tool
+  dnf -y install jq
+  # Run the "curl" command 25 times:
+  for X in $(seq 1 25) ; do curl -s search:9200 | jq .name ; done
+
+NOTE: The output of the for/curl loop above should show multiple "name" lines, roughly different.  These names are the ones that the `elasticsearch:2` auto generated.
+
+
+Or you can run:
+
+    dnf -y install jq procps
+    watch -n 1 '(for X in $(seq 1 25) ; do curl -s search:9200 | jq .name ; done ) | sort'
+
+Shows the 25 responses in a bit easier to see sorted layout.
+
