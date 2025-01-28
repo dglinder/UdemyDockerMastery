@@ -136,3 +136,11 @@ Shows the 25 responses in a bit easier to see sorted layout.
 
 # Container Images
 
+Why commands chained into single line with `&&`?
+Each `RUN` is a new layer within container, so putting multible commands on the same `RUN` stanza means less layers (docker file space and time during build and execute).
+
+Logging:
+Proper to send ALL logs to /dev/stdout and /dev/stderr.  Docker handles logging, don't use the log files.
+
+The `EXPOSE` only PERMITS the container to let these ports be available to the Docker pod, and later to the externan network.
+
